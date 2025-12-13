@@ -1,19 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/jwt";
+import { jwtVerify } from "jose";
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+export async function middleware(request: NextRequest) {
+  const token = request.cookies.get("auth_token")?.value;
+  console.log(token);
+  if (
+    request.nextUrl.pathname.startsWith("/api/login") ||
+    request.nextUrl.pathname.startsWith("/api/register")
+  ) {
+    return NextResponse.next();
+  }
 
   if (!token) {
     return NextResponse.json(
-      { success: false, message: "Unauthorized" },
+      { success: false, message: "Authentication required" },
       { status: 401 }
     );
   }
 
   try {
-    verifyToken(token);
-    return NextResponse.next();
+    const { payload } = await jwtVerify(token, secret);
+    console.log("Payload:", payload);
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-user-id", payload.userId as string);
+    requestHeaders.set("x-user-email", payload.email as string);
+
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   } catch {
     return NextResponse.json(
       { success: false, message: "Invalid or expired token" },
@@ -22,9 +38,7 @@ export function middleware(request: NextRequest) {
   }
 }
 
+
 export const config = {
-  matcher: [
-    "/api/watchlist/:path*",
-    "/api/stocks/:path*"
-  ]
+  matcher: ["/api/watchlist/:path*", "/api/stocks/:path*"],
 };

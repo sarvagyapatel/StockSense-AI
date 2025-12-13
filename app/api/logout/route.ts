@@ -1,11 +1,18 @@
+import { cookies } from "next/headers";
+
 export async function POST() {
-  return new Response(
-    JSON.stringify({ success: true, message: "Logged out" }),
+  const cookieStore = await cookies();
+
+  cookieStore.delete({
+    name: "token",
+    path: "/",
+  });
+
+  return Response.json(
     {
-      status: 200,
-      headers: {
-        "Set-Cookie": "token=; HttpOnly; Path=/; Max-Age=0"
-      }
-    }
+      success: true,
+      message: "Logged out successfully",
+    },
+    { status: 200 }
   );
 }

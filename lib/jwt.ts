@@ -1,17 +1,18 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
-export interface AuthTokenPayload extends JwtPayload {
+export interface JWTPayload {
   userId: string;
-  username: string;
+  email: string;
 }
 
-export function signToken(payload: AuthTokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: EXPIRES_IN });
+export function signToken(payload: JWTPayload) {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  });
 }
 
-export function verifyToken(token: string): AuthTokenPayload {
-  return jwt.verify(token, JWT_SECRET) as AuthTokenPayload;
+export function verifyToken(token: string): JWTPayload {
+  return jwt.verify(token, JWT_SECRET) as JWTPayload;
 }

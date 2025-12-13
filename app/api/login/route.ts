@@ -1,9 +1,12 @@
 import dbConnect from "@/lib/mongodb";
 import { User } from "@/models/User";
 import bcrypt from "bcryptjs";
-import { signToken } from "@/lib/jwt";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
-interface LoginBody {
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+interface LoginRequestBody {
   email: string;
   password: string;
 }
@@ -12,11 +15,17 @@ export async function POST(request: Request) {
   await dbConnect();
 
   try {
-    const body: LoginBody = await request.json();
+    const body: LoginRequestBody = await request.json();
     const { email, password } = body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return Response.json(
+        { success: false, message: "Email and password are required" },
+        { status: 400 }
+      );
+    }
 
+    const user = await User.findOne({ email, isVerified: true });
     if (!user) {
       return Response.json(
         { success: false, message: "Invalid credentials" },
@@ -24,35 +33,46 @@ export async function POST(request: Request) {
       );
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return Response.json(
         { success: false, message: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    const token = signToken({
-      userId: user._id.toString(),
-      username: user.username
+    const token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const cookieStore = await cookies();
+
+    cookieStore.set({
+      name: "auth_token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, 
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Login successful"
-      }),
+    return Response.json(
       {
-        status: 200,
-        headers: {
-          "Set-Cookie": `token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Strict`
-        }
-      }
+        success: true,
+        message: "Login successful",
+      },
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Login error", error);
+    console.error("Login error:", error);
     return Response.json(
-      { success: false, message: "Login failed" },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }
