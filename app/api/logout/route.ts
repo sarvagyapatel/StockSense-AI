@@ -1,5 +1,4 @@
 export async function POST() {
-    console.log("Logging out user");
   return new Response(
     JSON.stringify({ success: true, message: "Logged out" }),
     {
