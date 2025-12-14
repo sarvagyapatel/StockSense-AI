@@ -9,7 +9,7 @@ export default function Footer() {
             Built by Sarvagya Patel
           </p>
           <p className="text-muted-foreground text-xs mt-1">
-            © {new Date().getFullYear()} StockSense AI. All rights reserved.
+            © {new Date().getFullYear()} StockSenseAI. All rights reserved.
           </p>
         </div>
 
