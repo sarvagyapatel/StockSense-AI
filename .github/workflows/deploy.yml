@@ -49,7 +49,7 @@ jobs:
             -o ProxyCommand="cloudflared access ssh --hostname %h" \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           set -e
-          cd /var/www/StockSense-AI
+          cd var/www/StockSense-AI
           git pull origin master
           npm install
           npm run build
