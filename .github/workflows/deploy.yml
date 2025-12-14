@@ -14,27 +14,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "HOME is $HOME"
+          mkdir -p "$HOME/.ssh"
+          echo "${{ secrets.SSH_KEY }}" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          ssh-keyscan ${{ secrets.SSH_HOST }} >> "$HOME/.ssh/known_hosts"
 
       - name: Install cloudflared
+        shell: bash
         run: |
-          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
-          -o cloudflared
+          curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
-          sudo mv cloudflared /usr/local/bin/
+          sudo mv cloudflared /usr/local/bin/cloudflared
+
+      - name: Test SSH connection
+        shell: bash
+        run: |
+          ssh -o ProxyCommand="cloudflared access ssh --hostname %h" \
+          ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH_OK"
 
       - name: Deploy to server
+        shell: bash
         run: |
           ssh -o ProxyCommand="cloudflared access ssh --hostname %h" \
           ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             set -e
             cd /var/www/StockSense-AI
-            git pull origin main
+            git pull origin master
             npm install
             npm run build
-            pm2 restart stocksenseai
+            pm2 restart all
           EOF
