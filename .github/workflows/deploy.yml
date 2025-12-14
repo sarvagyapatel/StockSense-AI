@@ -34,18 +34,24 @@ jobs:
       - name: Test SSH connection
         shell: bash
         run: |
-          ssh -o ProxyCommand="cloudflared access ssh --hostname %h" \
-          ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH_OK"
+          ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ProxyCommand="cloudflared access ssh --hostname %h" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH_OK"
 
       - name: Deploy to server
         shell: bash
         run: |
-          ssh -o ProxyCommand="cloudflared access ssh --hostname %h" \
-          ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            set -e
-            cd /var/www/StockSense-AI
-            git pull origin master
-            npm install
-            npm run build
-            pm2 restart all
-          EOF
+          ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ProxyCommand="cloudflared access ssh --hostname %h" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+              set -e
+              cd /var/www/StockSense-AI
+              git pull origin master
+              npm install
+              npm run build
+              pm2 restart all
+            EOF
