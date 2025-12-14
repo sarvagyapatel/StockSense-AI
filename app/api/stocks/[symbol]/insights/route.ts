@@ -77,7 +77,6 @@ JSON FORMAT:
   "outlook": string
 }
 `;
-
     const aiRes = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {

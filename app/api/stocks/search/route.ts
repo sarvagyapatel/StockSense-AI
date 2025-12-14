@@ -1,5 +1,4 @@
 export async function GET(req: Request) {
-    console.log("API Key:", process.env.ALPHAVANTAGE_API_KEY);
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("query");
 

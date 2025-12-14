@@ -27,7 +27,14 @@ export async function searchStocks(query: string) {
     keywords: query
   });
 
-  return (data.bestMatches ?? []).map((item: any) => ({
+  type BestMatch = {
+    "1. symbol": string;
+    "2. name": string;
+    "4. region": string;
+    "8. currency": string;
+  };
+
+  return (data.bestMatches ?? []).map((item: BestMatch) => ({
     symbol: item["1. symbol"],
     name: item["2. name"],
     region: item["4. region"],
@@ -41,7 +48,16 @@ export async function fetchStockNews(symbol: string) {
     tickers: symbol
   });
 
-  return (data.feed ?? []).map((news: any) => ({
+  type NewsItem = {
+    title: string;
+    url: string;
+    summary: string;
+    source: string;
+    overall_sentiment_label: string;
+    time_published: string;
+  };
+
+  return (data.feed ?? []).map((news: NewsItem) => ({
     title: news.title,
     url: news.url,
     summary: news.summary,

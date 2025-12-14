@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 interface LoginRequestBody {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -16,16 +16,23 @@ export async function POST(request: Request) {
 
   try {
     const body: LoginRequestBody = await request.json();
-    const { email, password } = body;
+    const { identifier, password } = body;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return Response.json(
-        { success: false, message: "Email and password are required" },
+        { success: false, message: "Identifier and password are required" },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ email, isVerified: true });
+    const user = await User.findOne({
+      isVerified: true,
+      $or: [
+        { email: identifier },
+        { username: identifier },
+      ],
+    });
+
     if (!user) {
       return Response.json(
         { success: false, message: "Invalid credentials" },
@@ -59,14 +66,11 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, 
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return Response.json(
-      {
-        success: true,
-        message: "Login successful",
-      },
+      { success: true, message: "Login successful" },
       { status: 200 }
     );
   } catch (error) {

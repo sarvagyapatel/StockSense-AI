@@ -5,7 +5,6 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value;
-  console.log(token);
   if (
     request.nextUrl.pathname.startsWith("/api/login") ||
     request.nextUrl.pathname.startsWith("/api/register")
@@ -22,7 +21,6 @@ export async function middleware(request: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, secret);
-    console.log("Payload:", payload);
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-user-id", payload.userId as string);
     requestHeaders.set("x-user-email", payload.email as string);
