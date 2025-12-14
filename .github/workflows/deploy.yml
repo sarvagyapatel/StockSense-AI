@@ -50,6 +50,13 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           set -e
           cd var/www/StockSense-AI
+
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+          node -v
+          npm -v
+
           git pull origin master
           npm install
           npm run build
