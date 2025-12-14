@@ -100,6 +100,33 @@ All protected routes are secured using middleware that validates JWT tokens from
 
 ---
 
+## Rate Limiting
+
+To protect the application from abuse and ensure fair usage of resources, rate limiting is implemented using **Upstash Redis**.
+
+Rate limiting is enforced at the **middleware level**, ensuring requests are throttled before reaching API route logic.
+
+### Rate Limiting Strategy
+
+Different rate limits are applied based on the type of API:
+
+#### Authentication APIs
+- Endpoints: `/api/login`, `/api/register`
+- Limit: **5 requests per minute**
+- Purpose: Prevent brute-force login and account abuse
+
+#### Stock Search APIs
+- Endpoint: `/api/stocks/search`
+- Limit: **20 requests per minute**
+- Purpose: Prevent excessive external API usage
+
+#### AI Insight APIs
+- Endpoint: `/api/stocks/[symbol]/insights`
+- Limit: **5 requests per 10 minutes**
+- Purpose: Control LLM usage and cost
+
+---
+
 ## Security Considerations
 
 - Passwords are hashed before storage
@@ -151,10 +178,46 @@ It does not provide financial, investment, or trading advice.
 
 ## Deployment
 
-- Can be deployed on Vercel
-- MongoDB Atlas for database hosting
-- Environment variables configured via deployment platform
-- CI/CD supported through GitHub and Vercel integration
+The application is deployed on a **personal server** using a **Cloudflare Tunnel**, providing secure public access without exposing the server directly to the internet.
+
+### Deployment Architecture
+
+- **Server**: Self-hosted Linux server
+- **Reverse Proxy**: Cloudflare Tunnel
+- **Database**: MongoDB Atlas
+- **Rate Limiting**: Upstash Redis
+- **CI/CD**: GitHub Actions
+
+### Cloudflare Tunnel
+
+- Cloudflare Tunnel is used to expose the application securely
+- No inbound ports are opened on the server
+- TLS and DNS are handled by Cloudflare
+- Protects against direct IP exposure and common attacks
+
+### CI/CD Pipeline
+
+A CI/CD pipeline is configured using **GitHub Actions**:
+
+- Triggered on push to the main branch
+- Steps include:
+  - Code checkout
+  - Dependency installation
+  - Build validation
+  - Deployment to the server via secure SSH
+- Ensures consistent and automated deployments
+
+### Environment Configuration
+
+All sensitive values are stored as environment variables, including:
+
+- `JWT_SECRET`
+- `MONGODB_URI`
+- `ALPHAVANTAGE_API_KEY`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+This setup ensures secure, repeatable, and production-grade deployments.
 
 ---
 
